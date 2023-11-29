@@ -175,6 +175,8 @@ class FileSharingApp:
     # fetch methods
     def process_fetch_request(self, event):
         filename = self.search_entry.get()
+        # clear the previous files_to_display buffer
+        files_to_display.clear()
         local_repo_path = client.get_local_repository_path()
         file_path = os.path.join(local_repo_path, filename)  # Construct full file path
         # check file exists or not, if not send out the message
@@ -204,7 +206,11 @@ class FileSharingApp:
         try:
             lines = msg.splitlines()
             filename, num_of_peer = lines[0].split("|")
-        except IndexError or ValueError:
+        except (IndexError, ValueError) as e:
+            print(f"Error occurred: {e}")
+            return
+        except Exception as ex:
+            print(f"Unexpected error occurred: {ex}")
             return
 
         num_of_peer = int(num_of_peer)
@@ -247,7 +253,7 @@ class FileSharingApp:
         # display waiting window
         client.client.send(data.encode(client.FORMAT))
         self.wait_window.create_dialog(f"Getting file from {hostname}...")
-
+        print(client.msg_to_ui)
         if client.msg_to_ui == "N/A":
             tk.messagebox.showerror("Error", "File has been moved or deleted")
         else:

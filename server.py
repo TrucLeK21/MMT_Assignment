@@ -114,10 +114,8 @@ def process_discover_list(client_file_info, hostname, upload_port, event_flag):
 
 def handle_publish(msg, hostname, upload_port):
     filename, last_modified, file_size = msg.split("|")
-    
-    hostname = addr[0]
-    port = upload_port
-    add_file_info(filename, hostname, port, last_modified, file_size)
+
+    add_file_info(filename, hostname, upload_port, last_modified, file_size)
     
 
 def check_file_status(conn, requesting_client, requested_client, filename):
@@ -135,7 +133,11 @@ def check_file_status(conn, requesting_client, requested_client, filename):
 
 def handle_fetch(filename, conn, requesting_client):
     per_file_info = get_file_info(filename)
+
     if per_file_info:
+        # Filtering out the dictionaries with the requesting client
+        per_file_info = [client for client in per_file_info if client['hostname'] != requesting_client]
+        
         number_of_clients = len(per_file_info)
         # list all the owners of 'filename' for the requesting client to choose
         msg = f"REPLY_FETCH@{filename}|{number_of_clients}"
@@ -158,8 +160,8 @@ def handle_client(conn, addr, event_flag):
             remove_hostname_from_file_info(addr[0])
             break
         if not data: break
-
-        cmd, msg = data.split("@")
+        
+        cmd, msg = data.split("@", 1)
         
         if cmd == "CONNECT":
             upload_port, client_file_info = msg.split("#")
@@ -176,7 +178,7 @@ def handle_client(conn, addr, event_flag):
             handle_publish(msg, addr[0], upload_port)
             
         elif cmd == "FETCH":
-            handle_fetch(msg, conn, addr[0])
+            handle_fetch(msg, conn, requesting_client = addr[0])
             
         elif cmd == "REPLY_STATUS":
             filename, hostname, status, last_modified, file_size = msg.split("|")
@@ -188,7 +190,7 @@ def handle_client(conn, addr, event_flag):
                 # update lastest status to data base when getting status from client
                 add_file_info(filename, hostname,upload_port, last_modified, file_size)
             else:
-                msg = f"{cmd}@N/A"
+                msg = "N/A"
                 remove_client_from_a_file(filename, addr[0])
 
             # send status back to requesting client
