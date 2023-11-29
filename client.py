@@ -140,7 +140,7 @@ def receive_file(sck: socket.socket, file_name):
     filesize = receive_file_size(sck)
     # Open a new file where to store the received data.
     file_path = get_local_repository_path() + file_name
-    recieve_file_flag = True
+
     with open(file_path, "wb") as f:
         received_bytes = 0
         # Receive the file data in 1024-bytes chunks
@@ -152,9 +152,12 @@ def receive_file(sck: socket.socket, file_name):
                 f.write(chunk)
                 received_bytes += len(chunk)
 
+        # close file when receive file completely
+        f.close()    
+            
     print("Recieve file" , file_name, "complete!\n")
-    finish = True
     sck.close()
+    finish = True
 
 
 # send file to peers
@@ -170,7 +173,9 @@ def send_file(sck: socket.socket, file_name):
         while read_bytes := f.read(1024):
             sck.sendall(read_bytes)
 
-        print("Send file" , file_name, "complete!\n")
+        # close file when receive file completely
+        f.close()
+    print("Send file" , file_name, "complete!\n")
     sck.close()
 
 
@@ -217,7 +222,7 @@ def p2s_listen_thread():
             # assign global communicate variable to message
             msg_to_ui = msg    
             
-            # set flag to get message
+            # set flag to continue processing message
             finish = True
         #Server reply with peer's infomation
         elif cmd == "REPLY_PEER":
@@ -239,6 +244,8 @@ def p2s_listen_thread():
             else:
                 # inform the UI to print the request's status
                 msg_to_ui = msg
+                # close the wait window
+                finish = True
                 
         #Server request to discover the list of local files 
         elif cmd == "DISCOVER":

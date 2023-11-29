@@ -3,6 +3,7 @@ from tkinter import filedialog
 from tkinter import ttk
 import client
 import os
+import time
 
 files_to_display = []
 
@@ -38,18 +39,11 @@ class MyDialog:
 
         self.wait_window.grab_set()  # Make the wait window modal
 
-        self.check_flag()  # Check the flag periodically to finish the task
+        while not client.finish:
+            self.parent.update()  # Update the GUI to avoid freezing
+            time.sleep(0.05)  # Wait for a short duration before re-checking the flag
 
-    def check_flag(self):
-        if client.finish:
-            self.wait_window.destroy()  # Destroy the wait window when the task is done
-            client.finish = False
-        else:
-            self.parent.after(50, self.check_flag)  # Check again after 100 milliseconds
-            
-    def destroy_dialog(self):
-        if self.wait_window:
-            self.wait_window.destroy()  # Destroy the dialog window
+        self.wait_window.destroy()  # Destroy the wait window when the task is done
 
             
 class FileSharingApp:
@@ -181,7 +175,8 @@ class FileSharingApp:
     # fetch methods
     def process_fetch_request(self, event):
         filename = self.search_entry.get()
-        file_path = client.get_local_repository_path()
+        local_repo_path = client.get_local_repository_path()
+        file_path = os.path.join(local_repo_path, filename)  # Construct full file path
         # check file exists or not, if not send out the message
         if os.path.isfile(file_path) == True:
             self.status_label.config(text="File already exists in local repository", fg="red")
@@ -254,11 +249,10 @@ class FileSharingApp:
         self.wait_window.create_dialog(f"Getting file from {hostname}...")
 
         if client.msg_to_ui == "N/A":
-            self.wait_window.destroy_dialog()
             tk.messagebox.showerror("Error", "File has been moved or deleted")
         else:
             print(client.msg_to_ui)
-            self.wait_window.destroy_dialog()
+            print("done")
             self.status_label.config(text="Downloaded file successfully", fg="green")
         
         

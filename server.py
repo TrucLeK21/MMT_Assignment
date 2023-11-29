@@ -182,17 +182,17 @@ def handle_client(conn, addr, event_flag):
             filename, hostname, status, last_modified, file_size = msg.split("|")
             requesting_client = get_client_info(hostname)["socket"]
             if status == "OK":
-                cmd = "REPLY_PEER"
                 hostname = addr[0]
                 upload_port = get_client_info(hostname)["upload_port"]
                 msg = f"{filename}|{hostname}|{upload_port}"
+                # update lastest status to data base when getting status from client
                 add_file_info(filename, hostname,upload_port, last_modified, file_size)
             else:
-                cmd = "REPLY_PEER"
                 msg = f"{cmd}@N/A"
                 remove_client_from_a_file(filename, addr[0])
 
             # send status back to requesting client
+            cmd = "REPLY_PEER"
             info = f"{cmd}@{msg}"
             if requesting_client:
                 requesting_client.send(info.encode(FORMAT))
