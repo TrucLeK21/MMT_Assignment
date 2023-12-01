@@ -157,6 +157,7 @@ def handle_client(conn, addr, event_flag):
         try:
             data = conn.recv(SIZE).decode(FORMAT)
         except ConnectionResetError:
+            # if the client close the program suddenly, safely remove them out of data base
             remove_hostname_from_file_info(addr[0])
             break
         if not data: break
@@ -206,13 +207,19 @@ def handle_client(conn, addr, event_flag):
             check_file_status(conn, addr[0], requested_client, filename)
             
         elif cmd == "REPLY_DISCOVER":
-            upload_port = get_client_info(addr[0])["upload_port"]
-            process_discover_list(msg, addr[0], upload_port, event_flag)
-            
+            # check if the client's local repo is empty or not
+            if msg:
+                upload_port = get_client_info(addr[0])["upload_port"]
+                process_discover_list(msg, addr[0], upload_port, event_flag)
+            else:
+                print(f"({addr[0]})'s local repository is currently empty.")
+                
+            event_flag.set()
         elif cmd == "REPLY_PING":
             print(f"{addr} is currently connected")
             event_flag.set()
         elif cmd == "LOGOUT":
+            print("yes")
             break
             
     # delete all the client's information that file_info is containing
@@ -246,11 +253,12 @@ def get_user_input(event_flag):
     print("	ping [hostname]		live check the host named hostname")
     while True:
         user_input = input("Enter a command: ")
+        print("")
         # check syntax
         try:
             cmd, hostname = user_input.split(" ")
         except ValueError:
-            print(f"Command '{user_input}' not recognized.")
+            print(f"Command '{user_input}' not recognized.\n")
             continue
             
         if cmd == "discover":
@@ -262,7 +270,9 @@ def get_user_input(event_flag):
             live_check(hostname, event_flag)
             event_flag.wait()
         else:
-            print(f"Command '{user_input}' not recognized.")
+            print(f"Command '{user_input}' not recognized.\n")
+            
+        print("")
 
 
 #start the server

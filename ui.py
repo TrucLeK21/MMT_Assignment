@@ -60,10 +60,10 @@ class FileSharingApp:
         
         # main menu init
         self.publish_button = tk.Button(self.frame, text="Publish", command=self.publish_file, width=10, height=2)
-        self.publish_button.grid(row=0, column=0, padx=10, pady=10)
+        self.publish_button.grid(row=0, column=0, padx=20, pady=20)
 
         self.fetch_button = tk.Button(self.frame, text="Fetch", command=self.fetch_file, width=10, height=2)
-        self.fetch_button.grid(row=0, column=1, padx=10, pady=10)
+        self.fetch_button.grid(row=0,column=1, padx=20, pady=20)
 
         # publish init
         self.filename_label = tk.Label(self.frame, text="Filename:")
@@ -101,6 +101,9 @@ class FileSharingApp:
 
         self.status_label = tk.Label(self.frame, text="", fg="red")
 
+
+        # Disable resizing
+        # self.root.resizable(False, False)
 
         self.root.mainloop()
 
@@ -144,8 +147,8 @@ class FileSharingApp:
         self.scrollbar.grid_forget()
 
         # Show main menu buttons
-        self.publish_button.grid(row=0, column=0, padx=10, pady=10)
-        self.fetch_button.grid(row=0, column=1, padx=10, pady=10)
+        self.publish_button.grid(row=0, column=0, padx=20, pady=20)
+        self.fetch_button.grid(row=0,column=1, padx=20, pady=20)
 
     def publish_file(self):
         #hide main menu
@@ -280,5 +283,7 @@ def publish_file_to_server(filepath, filename):
         client.client.send(data.encode(client.FORMAT))
     else:
         tk.messagebox.showerror("Error", "File doesn't exist")
+
+
 
 app = FileSharingApp();
