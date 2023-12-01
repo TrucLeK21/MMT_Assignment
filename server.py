@@ -250,7 +250,7 @@ def live_check(hostname, event_flag):
 def get_user_input(event_flag):
     print("Server commands:")
     print("	discover [hostname]	discover the list of local files of the host named hostname")
-    print("	ping [hostname]		live check the host named hostname")
+    print("	ping [hostname]		live check the host named hostname\n")
     while True:
         user_input = input("Enter a command: ")
         print("")
@@ -279,7 +279,7 @@ def get_user_input(event_flag):
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind(ADDR)
 server.listen()
-print(f"Server begin listening on {IP}:{PORT}.")
+print(f"Server begin listening on {IP}:{PORT}.\n")
 
 # start a new thread for reading user input
 cli = threading.Thread(target=get_user_input, args=(event_flag, ))
