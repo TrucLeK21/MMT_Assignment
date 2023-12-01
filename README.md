@@ -6,7 +6,7 @@ USER MANUAL:
 
 2. First run "server.py", your computer IP address and PORT will be shown on the terminal like this:
 
-Server begin listening on YOUR_IP:YOUR_PORT.
+Server begin listening on YOUR_IP:YOUR_PORT.<br />
 The default PORT is 60000, you may also want to change your port if you want at line 6 in "server.py" file
 
 ```python 
