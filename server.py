@@ -15,10 +15,9 @@ client_sockets = {}
 event_flag = threading.Event()
 
 # add file information to the data base
-def add_file_info(filename, hostname, port, last_modified, file_size):
+def add_file_info(filename, hostname, last_modified, file_size):
     client_info = {
         "hostname" : hostname,
-        "port" : port,
         "last_modified" : last_modified,
         "file_size" : file_size
     }
@@ -40,11 +39,12 @@ def add_file_info(filename, hostname, port, last_modified, file_size):
             file_info[filename].append(client_info)
     
     
-def add_files_from_a_client(client_file_info, hostname, upload_port):
+def add_files_from_a_client(client_file_info, hostname) :
     client_data = []
     for line in client_file_info.strip().split('\n'):
         filename, last_modified, file_size = line.split('|')
-        add_file_info(filename, hostname, upload_port, last_modified, file_size)
+        # update or add more file from new information
+        add_file_info(filename, hostname, last_modified, file_size)
         per_file_info = [filename, last_modified, file_size]
         client_data.append(per_file_info)
 
@@ -93,8 +93,8 @@ def get_client_info(hostname):
     else:
         return None
 
-def process_discover_list(client_file_info, hostname, upload_port, event_flag):
-    client_data = add_files_from_a_client(client_file_info, hostname, upload_port)
+def process_discover_list(client_file_info, hostname, event_flag):
+    client_data = add_files_from_a_client(client_file_info, hostname)
     
     # Determine maximum width for each column
     max_widths = [max(len(row[i]) for row in client_data) for i in range(len(client_data[0]))]
@@ -112,10 +112,10 @@ def process_discover_list(client_file_info, hostname, upload_port, event_flag):
     event_flag.set()
         
 
-def handle_publish(msg, hostname, upload_port):
+def handle_publish(msg, hostname):
     filename, last_modified, file_size = msg.split("|")
 
-    add_file_info(filename, hostname, upload_port, last_modified, file_size)
+    add_file_info(filename, hostname, last_modified, file_size)
     
 
 def check_file_status(conn, requesting_client, requested_client, filename):
@@ -172,11 +172,10 @@ def handle_client(conn, addr, event_flag):
 
             if client_file_info:
                 # also add the client's repository's files list
-                add_files_from_a_client(client_file_info, addr[0], upload_port)
+                add_files_from_a_client(client_file_info, addr[0])
             
         elif cmd == "PUBLISH":
-            upload_port = get_client_info(addr[0])["upload_port"]
-            handle_publish(msg, addr[0], upload_port)
+            handle_publish(msg, addr[0])
             
         elif cmd == "FETCH":
             handle_fetch(msg, conn, requesting_client = addr[0])
@@ -189,7 +188,7 @@ def handle_client(conn, addr, event_flag):
                 upload_port = get_client_info(hostname)["upload_port"]
                 msg = f"{filename}|{hostname}|{upload_port}"
                 # update lastest status to data base when getting status from client
-                add_file_info(filename, hostname,upload_port, last_modified, file_size)
+                add_file_info(filename, hostname, last_modified, file_size)
             else:
                 msg = "N/A"
                 remove_client_from_a_file(filename, addr[0])
@@ -209,8 +208,7 @@ def handle_client(conn, addr, event_flag):
         elif cmd == "REPLY_DISCOVER":
             # check if the client's local repo is empty or not
             if msg:
-                upload_port = get_client_info(addr[0])["upload_port"]
-                process_discover_list(msg, addr[0], upload_port, event_flag)
+                process_discover_list(msg, addr[0], event_flag)
             else:
                 print(f"({addr[0]})'s local repository is currently empty.")
                 
