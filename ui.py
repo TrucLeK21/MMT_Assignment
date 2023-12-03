@@ -191,12 +191,13 @@ class FileSharingApp:
             msg = filename
             data = f"{cmd}@{msg}"
             
-            # reset global message to ui before sending request
+            
+            # reset flag before open wait window
+            client.finish = False
             client.client.send(data.encode(client.FORMAT))
-            
-            print(f"{filename} has been requested to server.")
+            # open wait window
             self.wait_window.create_dialog("Requesting file to the server...")
-            
+            print(f"{filename} has been requested to server.")
             self.process_fetch_reply(client.msg_to_ui)
             
         
@@ -211,10 +212,11 @@ class FileSharingApp:
             self.tree.delete(*self.tree.get_children())
             # notify the user if the file is not available on server
             self.status_label.config(text="File not found", fg="red")
+            return
             
         try:
             lines = msg.splitlines()
-            filename, num_of_peer = lines[0].split("|")
+            filename = lines[0]
         except (IndexError, ValueError) as e:
             print(f"Error occurred: {e}")
             return
@@ -252,15 +254,15 @@ class FileSharingApp:
         cmd = "SELECT_PEER"
         data = f"{cmd}@{filename}|{hostname}"
         
-        # display waiting window
+        # reset flag before open wait window
+        client.finish = False
+        
         client.client.send(data.encode(client.FORMAT))
         self.wait_window.create_dialog(f"Getting file from {hostname}...")
-        print(client.msg_to_ui)
         if client.msg_to_ui == "N/A":
             tk.messagebox.showerror("Error", "File has been moved or deleted")
+            self.status_label.config(text="")
         else:
-            print(client.msg_to_ui)
-            print("done")
             self.status_label.config(text="Downloaded file successfully", fg="green")
         
         
