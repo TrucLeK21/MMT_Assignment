@@ -138,15 +138,16 @@ def handle_fetch(filename, conn, requesting_client):
         # Filtering out the dictionaries with the requesting client
         per_file_info = [client for client in per_file_info if client['hostname'] != requesting_client]
         
-        number_of_clients = len(per_file_info)
+        # number_of_clients = len(per_file_info)
         # list all the owners of 'filename' for the requesting client to choose
-        msg = f"REPLY_FETCH@{filename}|{number_of_clients}"
+        msg = f"REPLY_FETCH@{filename}"
         
         for client in per_file_info:
             msg += f"\n{client['hostname']}|{client['last_modified']}|{client['file_size']}"
             conn.send(msg.encode(FORMAT))
     else:
-        msg = f"REPLY_FETCH@{filename}|0"
+        # file does not exist
+        msg = f"REPLY_PEER@N/A"
         conn.send(msg.encode(FORMAT))
         
 
@@ -216,9 +217,6 @@ def handle_client(conn, addr, event_flag):
         elif cmd == "REPLY_PING":
             print(f"{addr} is currently connected")
             event_flag.set()
-        elif cmd == "LOGOUT":
-            print("yes")
-            break
             
     # delete all the client's information that file_info is containing
     remove_hostname_from_file_info(addr[0])

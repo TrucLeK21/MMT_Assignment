@@ -206,6 +206,12 @@ class FileSharingApp:
             self.tree.insert("", tk.END, values=(file['hostname'], file['last_updated'], file['size']))        
             
     def process_fetch_reply(self, msg):
+        if msg == "N/A":
+            # clear the tree
+            self.tree.delete(*self.tree.get_children())
+            # notify the user if the file is not available on server
+            self.status_label.config(text="File not found", fg="red")
+            
         try:
             lines = msg.splitlines()
             filename, num_of_peer = lines[0].split("|")
@@ -215,28 +221,21 @@ class FileSharingApp:
         except Exception as ex:
             print(f"Unexpected error occurred: {ex}")
             return
+        
+        # save filename to send back request
+        self.filename = filename
+        # clear the list before displaying
+        files_to_display.clear()
+        for line in lines[1:]:
+            hostname, last_updated, size = line.split("|")
+            add_info_to_display(hostname, last_updated, size)
+            
+        # start to display the list on treeview
+        self.update_treeview(files_to_display)
+    
+        # clearing the notification
+        self.status_label.config(text="")
 
-        num_of_peer = int(num_of_peer)
-        
-        if num_of_peer >= 1:
-            # save filename to send back request
-            self.filename = filename
-            # clear the list before displaying
-            files_to_display.clear()
-            for line in lines[1:]:
-                hostname, last_updated, size = line.split("|")
-                add_info_to_display(hostname, last_updated, size)
-                
-            # start to display the list on treeview
-            self.update_treeview(files_to_display)
-        
-            # clearing the notification
-            self.status_label.config(text="")
-        else:
-            # clear the tree
-            self.tree.delete(*self.tree.get_children())
-            # notify the user if the file is not available on server
-            self.status_label.config(text="File not found", fg="red")
 
 
     def on_select(self, event):
