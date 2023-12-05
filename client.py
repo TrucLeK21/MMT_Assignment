@@ -257,6 +257,82 @@ def p2s_listen_thread():
             data = f"{cmd}@{msg_reply}"
             client.send(data.encode(FORMAT))
 
+def handle_publish(words):
+    lname, fname = words[1], words[2]
+    # Check if a file exists in lname 
+    if os.path.isfile(lname) == True:
+        #publish file in local file's system to local_repository
+        publish_to_local_repository(lname, fname)
+
+        #make the updated messsage and send to server
+        cmd = "PUBLISH"
+        local_repository_path = get_local_repository_path()
+        file_path = local_repository_path + fname
+        last_modified = time.ctime(os.path.getmtime(file_path))
+        file_size = os.path.getsize(file_path)
+        msg = fname + "|" + last_modified + "|" + str(file_size) 
+
+        # send updated messsage to server
+        data = f"{cmd}@{msg}"
+        client.send(data.encode(FORMAT))
+
+        print(f"Published information of {fname} {lname}.")
+    else:
+        print("File doesn't exist. Can't publish to local repository")
+
+
+def handle_fetch(words):
+    fname = words[1]
+    # Check if a file exists in local_repository
+    file_path = get_local_repository_path() + fname
+    if os.path.isfile(file_path) == True:
+        print("File already exists in repository")
+    else:   
+        cmd = "FETCH"
+        msg = fname
+        data = f"{cmd}@{msg}"
+        client.send(data.encode(FORMAT))
+        print(f"{fname} has been requested to server.")
+
+def process_command():
+    """
+    Recognize and process commands from the command line.
+
+    Args:
+        command (str): String of commands from the command line.
+
+    Returns:
+        str: Processing result or error message.
+    """
+    while True:
+        if select_peer_flag ==False:
+            command = input()
+
+            # Separate words in the command
+            words = command.split()
+
+            # Handling the "publish" statement
+            if words[0] == "publish":
+                if len(words) != 3:
+                    print("The 'publish' command requires 2 parameters: lname and fname.")
+                else:
+                    handle_publish(words)
+
+            # Handling the "fecth" statement
+            elif words[0] == "fetch":
+                if len(words) != 2:
+                    print("The 'fetch' command requires 1 parameter: fname.")
+                else:
+                    handle_fetch(words)
+            # Handling the "logout" statement
+            elif words[0] == "logout":
+                print("Disconnected from the server.")
+                cmd = "LOGOUT@"
+                client.send(cmd.encode(FORMAT))
+                client.close()
+                break
+            else:
+                print("Invalid command. Please use the format:\n publish <lname> <fname>\n fetch <fname>\n")
 
 
 def p2p_listen_thread():
@@ -281,8 +357,8 @@ def p2p_listen_thread():
 
 # change to server IP address if you want to connect to other machine
 IP = socket.gethostbyname(socket.gethostname())
-HOST = socket.gethostname()
 PORT = 60000
+HOST = socket.gethostname()
 ADDR = (IP, PORT)
 FORMAT = "utf-8"
 SIZE = 1024

@@ -14,7 +14,7 @@ The default PORT is 60000, you may also want to change your port if you want at 
 PORT = YOUR_PORT
 ```
 
-3. Change your server's IP address and PORT at line 283 and 285 in "client.py" file
+3. Change your server's IP address and PORT at line 359 and 369 in "client.py" file
 
 ```python 
 # change to server IP address if you want to connect to other machine
